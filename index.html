@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Week 7 Emergency Simulator | Rise to Lead</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--deep:#00313C;--mid:#074E59;--teal:#005D67;--peach:#F1CEB3;--cream:#F0E9E0;--gray:#717C7D;--warn:#C0392B;--green:#1A7A5E;--accent:#1B4F8A;--white:#fff;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:#1a1a1a}
+#landing,#sim{min-height:100vh}
+#sim{display:none;background:var(--deep);color:#fff}
+#sim.active{display:flex;flex-direction:column}
+.hero{background:linear-gradient(90deg,var(--deep) 0%, #003843 52%, #024652 100%);color:#fff;padding:38px 36px 34px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(241,206,179,.12);border:1px solid rgba(241,206,179,.25);border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--peach);text-transform:uppercase}
+.badge svg{width:12px;height:12px}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(38px,6vw,70px);line-height:.98;margin-top:20px}
+.hero h1 em{font-style:italic;color:var(--peach)}
+.hero p{max-width:820px;margin-top:20px;color:rgba(255,255,255,.76);font-size:17px;line-height:1.6}
+.warn-note{margin-top:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 18px;color:#1B4F8A;font-weight:500}
+.stats{display:flex;gap:48px;flex-wrap:wrap;margin-top:22px}
+.stat strong{display:block;color:var(--peach);font-size:28px;font-weight:700}
+.stat span{font-size:13px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em}
+.model-strip{background:#0f5b66;color:#fff;padding:14px 36px;font-size:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.model-strip .pill{display:inline-flex;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);font-size:13px}
+.section{padding:22px 36px 44px}
+.section-label{font-size:12px;font-weight:700;letter-spacing:.16em;color:#6b7c86;text-transform:uppercase}
+.section-sub{margin-top:10px;color:#71828c;font-size:14px}
+.cards{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.card{background:#fff;border:1px solid #d7dfe3;border-radius:18px;padding:18px;box-shadow:0 2px 8px rgba(0,49,60,.04);cursor:pointer;transition:.18s;display:flex;flex-direction:column;gap:10px}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,49,60,.1)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.num{font-family:'DM Serif Display',serif;font-size:42px;color:#e2e6e8;line-height:1}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{background:#edf4f8;color:#336e8f;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700}
+.card-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--deep)}
+.card-sub{color:#7a8a94;font-size:13px;line-height:1.45;min-height:36px}
+.card-role{background:#ede5de;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.card-role strong{color:var(--deep);font-size:14px}
+.card-role span{color:#7f8a93;font-size:13px;line-height:1.45}
+.start-btn{margin-top:auto;background:var(--deep);color:#fff;border:none;border-radius:10px;padding:12px 14px;font-weight:700;cursor:pointer}
+/* sim */
+.sim-head{display:flex;align-items:flex-start;gap:14px;padding:18px 22px;background:#013742;border-bottom:1px solid rgba(255,255,255,.07)}
+.back{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#fff;font-size:26px;line-height:1;cursor:pointer}
+.sim-meta{flex:1}
+.sim-num{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.42);font-weight:700}
+.sim-title{font-family:'DM Serif Display',serif;font-size:22px;color:#fff}
+.top-actions{display:flex;gap:10px}
+.top-btn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+.coach-btn{background:var(--peach);color:var(--deep);border:none}
+.ribbon{background:#0f5b66;padding:11px 22px;display:flex;justify-content:space-between;align-items:center;color:#d9edf0;font-size:13px}
+.ribbon .status-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;font-weight:700;color:#f8d469}
+.sim-layout{display:grid;grid-template-columns:260px 1fr 280px;min-height:calc(100vh - 116px)}
+.left{background:#022b33;border-right:1px solid rgba(255,255,255,.08);padding:18px 0;overflow:auto}
+.center{display:flex;flex-direction:column;background:var(--cream)}
+.right{background:#fbfbfb;border-left:1px solid #e4e6e8;padding:18px 14px;overflow:auto}
+.block{padding:0 18px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:18px}
+.block h4{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#a99d54;font-weight:700;margin-bottom:12px}
+.character{background:#0d3a43;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px}
+.character .name{font-size:20px;font-weight:700;color:#fff}
+.character .desc{margin-top:6px;color:#9fc2c7;line-height:1.45}
+.left .text{color:#dbe3e5;line-height:1.6;font-size:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#113c4d;padding:6px 12px;border-radius:999px;color:#fff;font-size:13px;font-weight:700}
+.metric{margin-top:10px}
+.metric-row{display:flex;justify-content:space-between;color:#dbe3e5;font-size:14px;margin-bottom:6px}
+.bar{height:12px;border-radius:999px;background:#123743;overflow:hidden}
+.fill{height:100%;border-radius:999px}
+.msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.msg-wrap{display:flex;gap:10px;align-items:flex-start}
+.msg-wrap.me{justify-content:flex-end}
+.avatar{width:28px;height:28px;border-radius:8px;background:#033843;color:var(--peach);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bubble-wrap{max-width:78%}
+.msg-name{font-size:11px;font-weight:700;color:#4d7683;margin-bottom:6px}
+.msg-wrap.me .msg-name{text-align:right;color:#6e8391}
+.bubble{background:#fff;color:#1a1a1a;border-radius:16px;padding:14px 16px;line-height:1.6;box-shadow:0 1px 8px rgba(0,49,60,.06)}
+.msg-wrap.me .bubble{background:#014857;color:#fff}
+.bubble-row{display:flex;gap:6px;align-items:flex-start}
+.spk-btn{background:none;border:none;cursor:pointer;color:#687b86;padding:4px;border-radius:6px;opacity:0;transition:.15s}
+.msg-wrap:hover .spk-btn{opacity:1}
+.spk-btn.playing{opacity:1;color:var(--teal)}
+.typing{display:none;align-self:flex-start;padding:12px 14px;background:#fff;border-radius:14px;color:#69808a;font-style:italic;box-shadow:0 1px 8px rgba(0,49,60,.06)}
+.input-area{background:#fff;border-top:1px solid #e4e6e8;padding:12px 18px}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.mic-btn,.send-btn2{width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+.mic-btn{background:#efe9e1;color:#6d7c84;border:1px solid #d8d0c6}
+.mic-btn.on{background:#c0392b;color:#fff;border-color:#c0392b}
+.send-btn2{background:var(--deep);color:#fff}
+textarea.input{flex:1;min-height:44px;max-height:110px;resize:none;background:#efe9e1;border:1.5px solid #d8d0c6;border-radius:14px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.55;outline:none}
+textarea.input:focus{border-color:#d89b3d;background:#fff}
+.helper{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#80919a}
+.right h3{font-family:'DM Serif Display',serif;font-size:28px;color:var(--deep)}
+.right .sub{color:#92a1ab;margin-top:6px;margin-bottom:12px}
+.obs-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #ebedef}
+.obs-check{width:18px;height:18px;border-radius:6px;border:2px solid #c4cdcf;cursor:pointer;flex-shrink:0;margin-top:3px}
+.obs-check.checked{background:#0a6372;border-color:#0a6372;position:relative}
+.obs-check.checked:after{content:'✓';position:absolute;inset:0;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.obs-text{color:#61727c;line-height:1.45}
+.score-box{margin-top:14px;background:#ede5de;border-radius:14px;padding:20px;text-align:center}
+.score-box .score{font-size:40px;color:var(--deep);font-weight:700}
+.score-box .label{color:#8b999f}
+.sugg{margin-top:18px;color:#7c8e97;font-size:13px}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px;z-index:30}
+#overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:85vh;overflow:auto}
+.modal-head{padding:18px 22px;border-bottom:1px solid #eceff1;display:flex;justify-content:space-between;align-items:center}
+.modal-head h2{font-family:'DM Serif Display',serif;color:var(--deep)}
+.modal-body{padding:22px;line-height:1.72;color:#32454d}
+.modal-body h3{margin-top:16px;color:var(--deep);font-family:'DM Serif Display',serif}
+.modal-body .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.modal-body .box{background:#f4efe8;padding:12px;border-radius:12px;text-align:center}
+@media(max-width:1100px){.sim-layout{grid-template-columns:240px 1fr} .right{display:none}}
+@media(max-width:760px){.sim-layout{grid-template-columns:1fr} .left{display:none} .hero{padding:28px 18px 24px} .section{padding:18px} .model-strip{padding:12px 18px} .sim-head{flex-wrap:wrap} }
+</style>
+</head>
+<body>
+<div id="landing">
+  <div class="hero">
+    <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.1 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 6.9-1z"/></svg> Rise to Lead: Foundations — Week 7</div>
+    <h1>Emergency<br><em>Simulator</em></h1>
+    <p>A live emergency campaign simulation. Ops, Marketing, and Tech all pull in different directions. The AI keeps the pressure on until you decide clearly.</p>
+    <div class="warn-note">Treat this as a live war room. Delay, drift, or consensus-seeking increases operational and relationship risk.</div>
+    <div class="stats">
+      <div class="stat"><strong>1</strong><span>Scenario</span></div><div class="stat"><strong>DADC</strong><span>Decision lens</span></div><div class="stat"><strong>AI</strong><span>Live responses</span></div><div class="stat"><strong>Executive</strong><span>Coaching feedback</span></div>
+    </div>
+  </div>
+  <div class="model-strip">
+    <strong>4C MODEL:</strong>
+    <span class="pill">C1 Clarity</span><span class="pill">C2 Consistency</span><span class="pill">C3 Credibility</span><span class="pill">C4 Care</span>
+    <span style="opacity:.8">The emergency campaign demands one clear call.</span>
+  </div>
+  <div class="section">
+    <div class="section-label">Click any scenario to begin your simulation</div>
+    <div class="section-sub">Same premium simulation structure as your latest working labs, enhanced for Week 7 and kept separate.</div>
+    <div class="cards">
+        <div class="card" onclick="openSim(0)">
+          <div class="card-top">
+            <div class="num">01</div>
+            <div class="badges"><span class="tag">DADC</span><span class="tag">War Room</span></div>
+          </div>
+          <div class="card-title">The Emergency Campaign</div>
+          <div class="card-sub">Emergency Simulator</div>
+          <div class="card-role"><strong>War Room Stakeholders</strong><span>Layla · Rania · Omar</span></div>
+          <button class="start-btn">Start Simulation →</button>
+        </div>
+        </div>
+  </div>
+</div>
+
+<div id="sim">
+  <div class="sim-head">
+    <button class="back" onclick="closeSim()">‹</button>
+    <div class="sim-meta">
+      <div class="sim-num" id="simNum">SIMULATION 01</div>
+      <div class="sim-title" id="simTitle"></div>
+    </div>
+    <div class="top-actions">
+      <button class="top-btn" onclick="toggleObserver()">☑ Observer</button>
+      <button class="top-btn coach-btn" onclick="getCoaching()">Get Coaching Feedback</button>
+    </div>
+  </div>
+  <div class="ribbon">
+    <span id="simSub"></span>
+    <span class="status-pill">Emergency Simulator</span>
+  </div>
+  <div class="sim-layout">
+    <div class="left">
+      <div class="block">
+        <h4>AI Is Playing</h4>
+        <div class="character">
+          <div class="name" id="ctxName"></div>
+          <div class="desc" id="ctxDesc"></div>
+        </div>
+      </div>
+      <div class="block"><h4>Situation</h4><div class="text" id="ctxSit"></div></div>
+      <div class="block"><h4>Your Objective</h4><div class="text" id="ctxObj" style="font-style:italic"></div></div>
+      <div class="block"><h4>4C Dimensions Tested</h4><div class="chips" id="ctxDims"></div></div>
+      <div class="block"><h4>Conversation Stage</h4><div class="chips"><span class="chip" id="stageChip">Opening</span></div></div>
+      <div class="block">
+        <h4>Live Simulation Signals</h4>
+        <div class="metric"><div class="metric-row"><span>Trust</span><span id="trustVal"></span></div><div class="bar"><div class="fill" id="trustFill" style="background:#58c4b7;width:40%"></div></div></div>
+        <div class="metric"><div class="metric-row"><span>Resistance</span><span id="resVal"></span></div><div class="bar"><div class="fill" id="resFill" style="background:#ef756a;width:60%"></div></div></div>
+        <div class="metric"><div class="metric-row"><span>Ownership Shift</span><span id="ownVal"></span></div><div class="bar"><div class="fill" id="ownFill" style="background:#efd497;width:20%"></div></div></div>
+      </div>
+      <div class="block"><h4>Tips</h4><div class="text" id="tips"></div></div>
+    </div>
+    <div class="center">
+      <div class="msgs" id="msgs"><div class="typing" id="typing">AI is responding…</div></div>
+      <div class="input-area">
+        <div class="input-row">
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+          <textarea class="input" id="inp" placeholder="Type your response as the manager..." rows="1" oninput="autoGrow(this)" onkeydown="keyHandler(event)"></textarea>
+          <button class="send-btn2" id="sendBtn" onclick="sendMsg()">➤</button>
+        </div>
+        <div class="helper"><span>Enter to send · Shift+Enter new line</span><span id="micHint"></span></div>
+        <div id="apiStat" class="helper" style="margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="right" id="rightPanel">
+      <h3>Observer Checklist</h3>
+      <div class="sub">Check behaviors you demonstrate</div>
+      <div id="obsList"></div>
+      <div class="sugg">AI suggestions</div>
+      <div id="suggText" class="sub">No suggestions yet.</div>
+      <div class="score-box"><div class="score"><span id="scoreNum">0</span>/<span id="scoreTotal">0</span></div><div class="label">behaviors demonstrated</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="modal">
+    <div class="modal-head"><h2>Coaching Feedback</h2><button class="top-btn" onclick="closeCoaching()">✕</button></div>
+    <div class="modal-body" id="coachBody"><div>Loading…</div></div>
+  </div>
+</div>
+
+<script>
+const SCENARIOS = [{"title": "The Emergency Campaign", "sub": "Emergency Simulator", "chips": ["DADC", "War Room"], "aiRole": "War Room Stakeholders", "aiRoleDesc": "Layla \u00b7 Rania \u00b7 Omar", "aiGender": "male", "situation": "A major B2B client has just confirmed a same-day 300-bouquet National Day order due by 6 PM. Ops says 180 clean, Marketing says 300 or the account is at risk, Tech says tracking is down until 4 PM.", "objective": "Define the real problem, decide without consensus, and communicate one clear execution path to all three teams.", "c4dims": ["C1 Clarity", "C2 Consistency", "C3 Credibility"], "tips": ["Use DADC mentally before you answer", "Do not let one function's panic become your decision", "Communicate one choice, not three possibilities"], "openingLine": "Layla: We can do 180 clean in 6 hours. 300 means skipping quality checks. Rania: The contract says 300 and the account is worth AED 180,000 a year. Omar: Tracking is down until 4 PM, so 300 means manual logging only. Someone needs to make a call.", "systemPrompt": "You are a Week 7 emergency campaign simulator for Floward. Play Layla (Ops Lead), Rania (Marketing Director), and Omar (Tech Lead) together. The manager must make a decision under severe time pressure. Layla protects quality and resists anything over 180 unless the process is adapted. Rania protects the commercial relationship and resists any underdelivery without a client comms plan. Omar protects operational visibility and resists anything that ignores the manual logging burden. Yield only when the manager defines the real problem, chooses a decision, and communicates a coordinated execution path. Push back on vague, consensus-seeking, or escalatory responses.", "checklist": ["Manager defined the real problem, not the symptom", "Manager named at least two realistic options and their trade-offs", "Manager committed to one decision clearly", "Manager gave each team a specific ask", "Manager did not seek full consensus before deciding", "Manager protected quality while managing relationship risk", "Manager addressed the manual logging constraint", "Manager ended with a time-bound execution plan"], "initialState": {"trust": 31, "resistance": 76, "ownership": 35, "stage": "Opening"}}];
+let currentScenario = null;
+let history = [];
+let observer = {};
+let observerVisible = true;
+let recognition = null;
+let micOn = false;
+let micTranscript = '';
+let currentUtterance = null;
+let voicesLoaded = false;
+
+function init() {
+  renderObserver();
+  loadVoices();
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  pingAPI();
+}
+
+function openSim(i) {
+  currentScenario = SCENARIOS[i];
+  history = [];
+  observer = {};
+  updateScenarioUI(i);
+  document.getElementById('landing').style.display='none';
+  document.getElementById('sim').classList.add('active');
+  document.getElementById('msgs').innerHTML='<div class="typing" id="typing">AI is responding…</div>';
+  renderObserver();
+  updateSignals(currentScenario.initialState || {trust:42,resistance:58,ownership:24,stage:'Opening'});
+  addAI(currentScenario.openingLine, currentScenario.aiRole);
+  history.push({role:'assistant', content: currentScenario.openingLine});
+  document.getElementById('inp').value='';
+  document.getElementById('inp').focus();
+}
+
+function closeSim() {
+  stopMic(true);
+  stopSpeech();
+  document.getElementById('sim').classList.remove('active');
+  document.getElementById('landing').style.display='block';
+}
+
+function updateScenarioUI(i) {
+  const s = currentScenario;
+  document.getElementById('simNum').textContent = `SIMULATION ${String(i+1).padStart(2,'0')}`;
+  document.getElementById('simTitle').innerHTML = s.title;
+  document.getElementById('simSub').textContent = s.sub;
+  document.getElementById('ctxName').textContent = s.aiRole;
+  document.getElementById('ctxDesc').textContent = s.aiRoleDesc;
+  document.getElementById('ctxSit').textContent = s.situation;
+  document.getElementById('ctxObj').textContent = s.objective;
+  document.getElementById('ctxDims').innerHTML = s.c4dims.map(x=>`<span class="chip">${x}</span>`).join('');
+  document.getElementById('tips').innerHTML = s.tips.map(t=>`→ ${t}`).join('<br>');
+}
+
+function updateSignals(st) {
+  document.getElementById('stageChip').textContent = st.stage;
+  document.getElementById('trustVal').textContent = `${st.trust}%`;
+  document.getElementById('resVal').textContent = `${st.resistance}%`;
+  document.getElementById('ownVal').textContent = `${st.ownership}%`;
+  document.getElementById('trustFill').style.width = `${st.trust}%`;
+  document.getElementById('resFill').style.width = `${st.resistance}%`;
+  document.getElementById('ownFill').style.width = `${st.ownership}%`;
+}
+
+function addAI(text, name) {
+  const msgs = document.getElementById('msgs');
+  const initials = (name||'AI').split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+  const div = document.createElement('div');
+  div.className = 'msg-wrap';
+  div.innerHTML = `<div class="avatar">${initials}</div>
+    <div class="bubble-wrap">
+      <div class="msg-name">${name}</div>
+      <div class="bubble-row">
+        <div class="bubble">${escapeHtml(text).replace(/\n/g,'<br>')}</div>
+        <button class="spk-btn" title="Listen to AI reply" onclick="speakReply(this, ${JSON.stringify(text)}, ${JSON.stringify(currentScenario.aiGender||'female')})">🔊</button>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addMe(text) {
+  const msgs = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'msg-wrap me';
+  div.innerHTML = `<div class="bubble-wrap">
+      <div class="msg-name">You</div>
+      <div class="bubble">${escapeHtml(text).replace(/\n/g,'<br>')}</div>
+    </div>
+    <div class="avatar">You</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping(show) {
+  const t = document.getElementById('typing');
+  if (t) t.style.display = show ? 'block' : 'none';
+}
+
+function keyHandler(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+
+function computeState(userText) {
+  let trust = 35, resistance = 65, ownership = 20, stage='Opening';
+  const joined = history.map(h=>h.content).join(' ').toLowerCase() + ' ' + userText.toLowerCase();
+  if (/because|rationale|reason|capacity|risk|standard|mandate|timeline|quality|impact/.test(joined)) trust += 10;
+  if (/sorry|maybe|perhaps|i think|what do you think/.test(userText.toLowerCase())) resistance += 8;
+  if (/i am deciding|the decision is|we will|i need you to|here is the plan/.test(userText.toLowerCase())) ownership += 15;
+  if (history.length > 2) stage = 'Exploration';
+  if (history.length > 4) stage = 'Clarification';
+  if (history.length > 6) stage = 'Commitment';
+  trust = Math.max(10, Math.min(90, trust + Math.min(history.length*2, 18)));
+  resistance = Math.max(10, Math.min(90, resistance - Math.min(history.length*2, 18)));
+  ownership = Math.max(5, Math.min(95, ownership + Math.min(history.length*3, 24)));
+  return {trust, resistance, ownership, stage};
+}
+
+async function pingAPI() {
+  try {
+    const r = await fetch('/api/chat');
+    const data = await r.json();
+    setApiStatus(data.ok && data.hasApiKey, data.ok && data.hasApiKey ? 'AI connected · Ready' : 'API key missing');
+  } catch(e) {
+    setApiStatus(false, 'Open via your Vercel deployment');
+  }
+}
+
+function setApiStatus(ok, msg) {
+  document.getElementById('apiStat').innerHTML = `<span style="color:${ok?'#27ae60':'#c0392b'}">●</span> ${msg}`;
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('inp');
+  const text = inp.value.trim();
+  if (!text || !currentScenario) return;
+  stopSpeech();
+  if (micOn) stopMic(true);
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  addMe(text);
+  history.push({role:'user',content:text});
+  inp.value='';
+  inp.style.height='44px';
+  micTranscript = '';
+  showTyping(true);
+  const state = computeState(text);
+  updateSignals(state);
+  const sys = `${currentScenario.systemPrompt}
+
+CRITICAL RULES:
+- Stay in character.
+- This is a premium leadership simulation.
+- Respond specifically to what the manager just said.
+- Resist weak, vague, apologetic, or unclear responses.
+- Yield only when the manager demonstrates clarity, rationale, steadiness, and a concrete path.
+- Reference earlier turns when relevant.
+- 2-4 natural sentences only.
+
+LIVE STATE:
+- Trust: ${state.trust}/100
+- Resistance: ${state.resistance}/100
+- Ownership Shift: ${state.ownership}/100
+- Stage: ${state.stage}`;
+  try {
+    const response = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:700,
+        system: sys,
+        messages: history
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'I need a moment.';
+    history.push({role:'assistant',content:reply});
+    showTyping(false);
+    addAI(reply, currentScenario.aiRole);
+    suggestObserver(text);
+  } catch(e) {
+    showTyping(false);
+    addAI('[Connection error — check deployment and API key]', currentScenario.aiRole);
+  }
+  sendBtn.disabled = false;
+  inp.focus();
+}
+
+function renderObserver() {
+  if (!currentScenario) return;
+  const list = document.getElementById('obsList');
+  list.innerHTML = currentScenario.checklist.map((t,i)=>`<div class="obs-item"><div class="obs-check ${observer[i]?'checked':''}" onclick="toggleCheck(${i})"></div><div class="obs-text">${t}</div></div>`).join('');
+  document.getElementById('scoreNum').textContent = Object.values(observer).filter(Boolean).length;
+  document.getElementById('scoreTotal').textContent = currentScenario.checklist.length;
+}
+
+function toggleCheck(i) {
+  observer[i] = !observer[i];
+  renderObserver();
+}
+
+function suggestObserver(text) {
+  const low = text.toLowerCase();
+  currentScenario.checklist.forEach((item, i) => {
+    if (/decision clearly|specific standard|specific time|rationale|concrete|mandate|calm|next step|alternative|quality risk|manual logging|client/.test(low) && !observer[i]) {
+      if ((/specific time/.test(item.toLowerCase()) && /pm|am|hour|today|by /.test(low)) ||
+          (/rationale/.test(item.toLowerCase()) && /because|risk|capacity|impact/.test(low)) ||
+          (/decision/.test(item.toLowerCase()) && /decision|we will|i am choosing/.test(low)) ||
+          (/alternative|next step|manual|client/.test(item.toLowerCase()) && /plan|assign|update|brief|manual/.test(low))) observer[i] = true;
+    }
+  });
+  renderObserver();
+}
+
+function toggleObserver() {
+  observerVisible = !observerVisible;
+  document.getElementById('rightPanel').style.display = observerVisible ? 'block' : 'none';
+}
+
+async function getCoaching() {
+  if (!currentScenario) return;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('coachBody').innerHTML = '<div>Analysing your conversation...</div>';
+  const conv = history.map(m => `${m.role==='user'?'MANAGER':'AI'}: ${m.content}`).join('\n\n');
+  const prompt = `You are an executive leadership coach at Floward.
+Provide concise, premium coaching feedback in HTML.
+
+SCENARIO: ${currentScenario.title}
+KEY SKILL: ${currentScenario.keySkill}
+OBJECTIVE: ${currentScenario.objective}
+CHECKLIST SCORE: ${Object.values(observer).filter(Boolean).length}/${currentScenario.checklist.length}
+
+CONVERSATION:
+${conv}
+
+Return HTML using:
+<h3>Overall Assessment</h3><p>...</p>
+<div class="grid">
+<div class="box"><strong>X/10</strong><div>Clarity</div></div>
+<div class="box"><strong>X/10</strong><div>Credibility</div></div>
+<div class="box"><strong>X/10</strong><div>Steadiness</div></div>
+<div class="box"><strong>X/10</strong><div>Decision Quality</div></div>
+</div>
+<h3>What Landed Well</h3><p>...</p>
+<h3>Critical Gap</h3><p>...</p>
+<h3>Better Phrasing</h3><p>...</p>
+<h3>One Line to Remember</h3><p>...</p>`;
+  try {
+    const r = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1200,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await r.json();
+    document.getElementById('coachBody').innerHTML = data.content?.[0]?.text || '<div>Unable to generate coaching.</div>';
+  } catch(e) {
+    document.getElementById('coachBody').innerHTML = '<div>Error generating coaching feedback.</div>';
+  }
+}
+
+function closeCoaching() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function loadVoices() {
+  if (typeof speechSynthesis === 'undefined') return;
+  speechSynthesis.getVoices();
+  voicesLoaded = true;
+}
+
+function pickVoice(gender) {
+  if (typeof speechSynthesis === 'undefined') return null;
+  const voices = speechSynthesis.getVoices() || [];
+  if (!voices.length) return null;
+  const femaleHints = /female|woman|zira|aria|samantha|victoria|ava|allison|susan|karen|moira/i;
+  const maleHints = /male|man|david|mark|alex|tom|daniel|fred|jorge|google uk english male/i;
+  let v = voices.find(v => gender === 'female' ? femaleHints.test(v.name) : maleHints.test(v.name));
+  if (!v) v = voices.find(v => /en/i.test(v.lang)) || voices[0];
+  return v;
+}
+
+function stopSpeech() {
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.cancel();
+  }
+  document.querySelectorAll('.spk-btn').forEach(btn => btn.classList.remove('playing'));
+  currentUtterance = null;
+}
+
+function speakReply(btn, text, gender) {
+  if (typeof speechSynthesis === 'undefined') return;
+  if (micOn) stopMic(true);
+  if (currentUtterance) {
+    stopSpeech();
+    if (btn.classList.contains('playing')) return;
+  }
+  stopSpeech();
+  const utter = new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim());
+  const voice = pickVoice(gender);
+  if (voice) utter.voice = voice;
+  utter.rate = 1;
+  utter.pitch = gender === 'female' ? 1.03 : 0.96;
+  utter.onend = () => {
+    btn.classList.remove('playing');
+    currentUtterance = null;
+  };
+  utter.onerror = () => {
+    btn.classList.remove('playing');
+    currentUtterance = null;
+  };
+  btn.classList.add('playing');
+  currentUtterance = utter;
+  speechSynthesis.speak(utter);
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Speech recognition is not supported in this browser.');
+    return;
+  }
+  if (micOn) {
+    stopMic(false);
+    return;
+  }
+  stopSpeech();
+  document.getElementById('inp').value = '';
+  micTranscript = '';
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.onstart = () => {
+    micOn = true;
+    document.getElementById('micBtn').classList.add('on');
+    document.getElementById('micHint').textContent = 'Recording — click mic again to stop';
+  };
+  recognition.onresult = (event) => {
+    let interim = '';
+    let finalText = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const tr = event.results[i][0].transcript;
+      if (event.results[i].isFinal) finalText += tr + ' ';
+      else interim += tr;
+    }
+    if (finalText) micTranscript += finalText;
+    const val = (micTranscript + interim).trim();
+    const inp = document.getElementById('inp');
+    inp.value = val;
+    autoGrow(inp);
+  };
+  recognition.onend = () => {
+    if (micOn) {
+      // user stopped or browser ended; reflect stopped state and keep current text
+      micOn = false;
+      document.getElementById('micBtn').classList.remove('on');
+      document.getElementById('micHint').textContent = '';
+    }
+  };
+  recognition.start();
+}
+
+function stopMic(abortOnly) {
+  if (recognition) {
+    try { abortOnly ? recognition.abort() : recognition.stop(); } catch(e) {}
+  }
+  micOn = false;
+  document.getElementById('micBtn').classList.remove('on');
+  document.getElementById('micHint').textContent = '';
+}
+
+init();
+</script>
+</body>
+</html>
